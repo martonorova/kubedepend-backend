@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    depends_on:
+      - db
+    volumes:
+      - ./:/app
+    ports:
+      - 8080:8080
+    env_file:
+      - .env
+    entrypoint:
+      - "/bin/bash"
+      - "./scripts/entrypoint.dev.sh"
+  db:
+    image: postgres:12.0
+    restart: on-failure
+    env_file:
+      - .env
+    ports:
+      - 5432:5432
+    volumes:
+      - kubedepend-volume:/var/lib/postgresql/data
+    
+
+volumes:
+  kubedepend-volume:
