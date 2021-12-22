@@ -3,4 +3,5 @@
 # download and install CompileDaemon without modifying go.mod
 go install github.com/githubnemo/CompileDaemon@latest
 
-CompileDaemon --build="make build" --command="make run" --include=".env" --include="Makefile"
+# use ./main for command instead of "make run", make run exits after starting the application, and CompileDaemon will not have a reference to the application restart it on change
+CompileDaemon --build="make build" --command="./main" --include=".env" --include="Makefile"

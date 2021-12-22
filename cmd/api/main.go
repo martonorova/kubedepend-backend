@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com/joho/godotenv"
@@ -18,7 +17,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println("application started")
+
+	if err := app.StartAPI(); err != nil {
+		log.Fatal(err.Error())
+	}
 
 	exithandler.Init(func() {
 		if err := app.DB.Close(); err != nil {

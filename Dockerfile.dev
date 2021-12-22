@@ -9,3 +9,5 @@ RUN go mod download
 # the source code is mounted as volume during development
 # COPY . .
 
+# EXPOSE 8080
+
