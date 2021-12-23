@@ -46,6 +46,7 @@ func startAPI(app *application.Application) error {
 	router.GET(c.ROUTE_ALL_JOB, controllers.GetJobs)
 	router.GET(c.ROUTE_SINGLE_JOB, controllers.GetJob)
 	router.POST(c.ROUTE_ALL_JOB, controllers.AddJob)
+	router.DELETE(c.ROUTE_SINGLE_JOB, controllers.DeleteJob)
 
 	err := router.Run("0.0.0.0:8080")
 

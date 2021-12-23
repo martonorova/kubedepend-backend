@@ -7,13 +7,14 @@ import (
 	"github.com/martonorova/kubedepend-backend/application"
 	"github.com/martonorova/kubedepend-backend/dto"
 	m "github.com/martonorova/kubedepend-backend/model"
+	"gorm.io/gorm"
 )
 
 func GetJobs(c *gin.Context) {
 
 	var jobs []m.Job
 
-	dbClient := c.MustGet("app").(*application.Application).DB.Client
+	dbClient := getDbClientFromContext(c)
 
 	result := dbClient.Find(&jobs)
 
@@ -25,7 +26,7 @@ func GetJobs(c *gin.Context) {
 }
 
 func GetJob(c *gin.Context) {
-	dbClient := c.MustGet("app").(*application.Application).DB.Client
+	dbClient := getDbClientFromContext(c)
 
 	var job m.Job
 
@@ -46,9 +47,9 @@ func AddJob(c *gin.Context) {
 	}
 
 	// Save to db
-	dbClient := c.MustGet("app").(*application.Application).DB.Client
+	dbClient := getDbClientFromContext(c)
 
-	job := m.Job{Input: input.Input}
+	job := m.Job{Input: input.Input, Status: m.JOB_CREATED}
 	result := dbClient.Create(&job)
 
 	if result.Error != nil {
@@ -56,4 +57,27 @@ func AddJob(c *gin.Context) {
 	}
 
 	c.IndentedJSON(http.StatusCreated, m.APISuccessWithData(job))
+}
+
+func DeleteJob(c *gin.Context) {
+	dbClient := getDbClientFromContext(c)
+
+	// Get model if exists
+	var job m.Job
+
+	if err := dbClient.First(&job, c.Param("id")).Error; err != nil {
+		c.IndentedJSON(http.StatusNotFound, m.APIError())
+		return
+	}
+
+	result := dbClient.Delete(&job)
+	if result.Error != nil {
+		panic("DB error")
+	}
+
+	c.IndentedJSON(http.StatusOK, m.APISuccess())
+}
+
+func getDbClientFromContext(c *gin.Context) *gorm.DB {
+	return c.MustGet("app").(*application.Application).DB.Client
 }
