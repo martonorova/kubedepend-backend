@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/martonorova/kubedepend-backend/application"
+	"github.com/martonorova/kubedepend-backend/dto"
 	m "github.com/martonorova/kubedepend-backend/model"
 )
 
@@ -12,7 +13,6 @@ func GetJobs(c *gin.Context) {
 
 	var jobs []m.Job
 
-	// result := application.Application.DB.Client.Find(&jobs)
 	dbClient := c.MustGet("app").(*application.Application).DB.Client
 
 	result := dbClient.Find(&jobs)
@@ -21,5 +21,26 @@ func GetJobs(c *gin.Context) {
 		panic("DB error")
 	}
 
-	c.IndentedJSON(http.StatusOK, jobs)
+	c.IndentedJSON(http.StatusOK, m.APISuccess(jobs))
+}
+
+func AddJob(c *gin.Context) {
+	var input dto.CreateJobDTO
+
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.IndentedJSON(http.StatusBadRequest, m.APIError())
+		return
+	}
+
+	// Save to db
+	dbClient := c.MustGet("app").(*application.Application).DB.Client
+
+	job := m.Job{Input: input.Input}
+	result := dbClient.Create(&job)
+
+	if result.Error != nil {
+		panic("DB error")
+	}
+
+	c.IndentedJSON(http.StatusCreated, m.APISuccess(job))
 }

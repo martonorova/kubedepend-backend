@@ -44,7 +44,7 @@ func startAPI(app *application.Application) error {
 	})
 
 	router.GET(c.ROUTE_ALL_JOB, controllers.GetJobs)
-	router.POST(c.ROUTE_ALL_JOB)
+	router.POST(c.ROUTE_ALL_JOB, controllers.AddJob)
 
 	err := router.Run("0.0.0.0:8080")
 
