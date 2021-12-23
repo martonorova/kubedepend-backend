@@ -2,12 +2,16 @@ package db
 
 import (
 	"database/sql"
+	"log"
 
 	_ "github.com/lib/pq"
+	"github.com/martonorova/kubedepend-backend/model"
+	"gorm.io/driver/postgres"
+	"gorm.io/gorm"
 )
 
 type DB struct {
-	Client *sql.DB
+	Client *gorm.DB
 }
 
 func Get(connString string) (*DB, error) {
@@ -22,18 +26,36 @@ func Get(connString string) (*DB, error) {
 }
 
 func (d *DB) Close() error {
-	return d.Client.Close()
+	sqlDB, err := d.Client.DB()
+	if err != nil {
+		log.Println(err.Error())
+		return err
+	}
+
+	sqlDB.Close()
+	return nil
 }
 
-func get(connString string) (*sql.DB, error) {
-	db, err := sql.Open("postgres", connString)
+func (d *DB) SetupModels() error {
+	err := d.Client.AutoMigrate(&model.Job{})
+
+	return err
+}
+
+func get(connString string) (*gorm.DB, error) {
+
+	sqlDB, err := sql.Open("postgres", connString)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := db.Ping(); err != nil {
+	if err := sqlDB.Ping(); err != nil {
 		return nil, err
 	}
 
-	return db, nil
+	gormDB, err := gorm.Open(postgres.New(postgres.Config{
+		Conn: sqlDB,
+	}), &gorm.Config{})
+
+	return gormDB, nil
 }

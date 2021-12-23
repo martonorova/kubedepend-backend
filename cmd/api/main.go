@@ -3,8 +3,11 @@ package main
 import (
 	"log"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/martonorova/kubedepend-backend/application"
+	c "github.com/martonorova/kubedepend-backend/constants"
+	"github.com/martonorova/kubedepend-backend/controllers"
 	"github.com/martonorova/kubedepend-backend/exithandler"
 )
 
@@ -18,7 +21,7 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	if err := app.StartAPI(); err != nil {
+	if err := startAPI(app); err != nil {
 		log.Fatal(err.Error())
 	}
 
@@ -27,4 +30,23 @@ func main() {
 			log.Println(err.Error())
 		}
 	})
+}
+
+func startAPI(app *application.Application) error {
+	router := gin.New()
+
+	router.Use(gin.Logger(), gin.Recovery())
+
+	router.Use(func(c *gin.Context) {
+		// provide the application instance to controllers
+		c.Set("app", app)
+		c.Next()
+	})
+
+	router.GET(c.ROUTE_ALL_JOB, controllers.GetJobs)
+	router.POST(c.ROUTE_ALL_JOB)
+
+	err := router.Run("0.0.0.0:8080")
+
+	return err
 }
