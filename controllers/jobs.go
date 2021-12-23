@@ -21,7 +21,20 @@ func GetJobs(c *gin.Context) {
 		panic("DB error")
 	}
 
-	c.IndentedJSON(http.StatusOK, m.APISuccess(jobs))
+	c.IndentedJSON(http.StatusOK, m.APISuccessWithData(jobs))
+}
+
+func GetJob(c *gin.Context) {
+	dbClient := c.MustGet("app").(*application.Application).DB.Client
+
+	var job m.Job
+
+	if err := dbClient.First(&job, c.Param("id")).Error; err != nil {
+		c.IndentedJSON(http.StatusNotFound, m.APIError())
+		return
+	}
+
+	c.IndentedJSON(http.StatusOK, m.APISuccessWithData(job))
 }
 
 func AddJob(c *gin.Context) {
@@ -42,5 +55,5 @@ func AddJob(c *gin.Context) {
 		panic("DB error")
 	}
 
-	c.IndentedJSON(http.StatusCreated, m.APISuccess(job))
+	c.IndentedJSON(http.StatusCreated, m.APISuccessWithData(job))
 }

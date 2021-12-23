@@ -14,7 +14,7 @@ type APIResponse struct {
 }
 
 // TODO should use pointers instead?
-func APISuccess(data interface{}) APIResponse {
+func APISuccessWithData(data interface{}) APIResponse {
 	return APIResponse{Status: SuccessStatus, Data: data}
 }
 
