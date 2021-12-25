@@ -4,14 +4,17 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
-	dbUser     string
-	dbPassword string
-	dbHost     string
-	dbPort     string
-	dbName     string
+	dbUser       string
+	dbPassword   string
+	dbHost       string
+	dbPort       string
+	dbName       string
+	NWorkers     uint64
+	JobQueueSize uint64
 }
 
 func Get() *Config {
@@ -22,6 +25,17 @@ func Get() *Config {
 	flag.StringVar(&conf.dbHost, "dbhost", os.Getenv("POSTGRES_HOST"), "DB host")
 	flag.StringVar(&conf.dbPort, "dbport", os.Getenv("POSTGRES_PORT"), "DB port")
 	flag.StringVar(&conf.dbName, "dbname", os.Getenv("POSTGRES_DB"), "DB name")
+
+	nWorkers, err := strconv.ParseUint(os.Getenv("WORKER_COUNT"), 10, 64)
+	if err != nil {
+		panic(err.Error())
+	}
+	jobQueueSize, err := strconv.ParseUint(os.Getenv("QUEUE_SIZE"), 10, 64)
+	if err != nil {
+		panic(err.Error())
+	}
+	flag.Uint64Var(&conf.NWorkers, "nworkers", nWorkers, "Number of workers")
+	flag.Uint64Var(&conf.JobQueueSize, "queuesize", jobQueueSize, "Size of job queue")
 
 	flag.Parse()
 

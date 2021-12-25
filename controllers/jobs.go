@@ -39,7 +39,7 @@ func GetJob(c *gin.Context) {
 }
 
 func AddJob(c *gin.Context) {
-	var input dto.CreateJobDTO
+	var input dto.CreateJobRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.IndentedJSON(http.StatusBadRequest, m.APIError())
@@ -54,6 +54,13 @@ func AddJob(c *gin.Context) {
 
 	if result.Error != nil {
 		panic("DB error")
+	}
+
+	dispatcher := c.MustGet("app").(*application.Application).Dispatcher
+
+	// Collect Job for worker pool
+	if err := dispatcher.Submit(dto.SubmitJobDTO{ID: job.ID, Input: job.Input}); err != nil {
+		c.IndentedJSON(http.StatusInternalServerError, m.APIError())
 	}
 
 	c.IndentedJSON(http.StatusCreated, m.APISuccessWithData(job))

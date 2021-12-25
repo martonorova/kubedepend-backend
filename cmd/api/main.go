@@ -21,6 +21,8 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
+	app.Dispatcher.Start()
+
 	if err := startAPI(app); err != nil {
 		log.Fatal(err.Error())
 	}
@@ -39,6 +41,7 @@ func startAPI(app *application.Application) error {
 
 	router.Use(func(c *gin.Context) {
 		// provide the application instance to controllers
+		// TODO only provide this to selected controllers
 		c.Set("app", app)
 		c.Next()
 	})
