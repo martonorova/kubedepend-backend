@@ -8,6 +8,7 @@ import (
 
 // collect results from Workers
 type Collector struct {
+	ResultC chan dto.JobResultDTO
 }
 
 // register itself to WorkerQueue (pool) and execute Jobs
@@ -15,6 +16,7 @@ type Worker struct {
 	ID          uint64
 	JobC        chan dto.SubmitJobDTO
 	WorkerQueue chan chan dto.SubmitJobDTO
+	ResultQueue chan dto.JobResultDTO
 	QuitC       chan bool
 }
 
@@ -27,11 +29,18 @@ type Dispatcher struct {
 	workers      map[uint64]*Worker
 }
 
-func NewWorker(id uint64, workerQueue chan chan dto.SubmitJobDTO) *Worker {
+func NewCollector(resultQueueSize uint64) *Collector {
+	return &Collector{
+		ResultC: make(chan dto.JobResultDTO, resultQueueSize),
+	}
+}
+
+func NewWorker(id uint64, workerQueue chan chan dto.SubmitJobDTO, resultQueue chan dto.JobResultDTO) *Worker {
 	worker := &Worker{
 		ID:          id,
 		JobC:        make(chan dto.SubmitJobDTO),
 		WorkerQueue: workerQueue,
+		ResultQueue: resultQueue,
 		QuitC:       make(chan bool),
 	}
 
@@ -50,6 +59,17 @@ func NewDispatcher(nworkers uint64, jobQueueSize uint64) *Dispatcher {
 	return dispatcher
 }
 
+func (c *Collector) Start() {
+	go func() {
+		for {
+			select {
+			case result := <-c.ResultC:
+				fmt.Printf("Collected Job result ID: %d, Result: %d", result.ID, result.Result)
+			}
+		}
+	}()
+}
+
 func (w *Worker) Start() {
 	go func() {
 		for {
@@ -62,9 +82,11 @@ func (w *Worker) Start() {
 
 				result := fibonacci(job.Input)
 
-				// TODO save to DB
+				// TODO send to collector
+				w.ResultQueue <- dto.JobResultDTO{ID: job.ID, Result: result}
 
-				fmt.Printf("worker%d: Finished job with ID: %d, Result:%d\n", w.ID, job.ID, result)
+				fmt.Printf("worker%d: Finished job with ID: %d \n", w.ID, job.ID)
+
 			case <-w.QuitC:
 				fmt.Printf("worker%d: Stopping\n", w.ID)
 			}
@@ -89,12 +111,12 @@ func (d *Dispatcher) Submit(jobSubmit dto.SubmitJobDTO) error {
 	return nil
 }
 
-func (d *Dispatcher) Start() {
+func (d *Dispatcher) Start(collector *Collector) {
 	// Create workers
 	// TODO start with a few workers, and increase the pool if needed
 	fmt.Println("Starting dispatcher...")
 	for i := 0; i < int(d.nworkers); i++ {
-		worker := NewWorker(uint64(i+1), d.WorkerQueue)
+		worker := NewWorker(uint64(i+1), d.WorkerQueue, collector.ResultC)
 
 		// register worker in dispatcher
 		d.workers[worker.ID] = worker
@@ -102,6 +124,10 @@ func (d *Dispatcher) Start() {
 		// start worker
 		worker.Start()
 	}
+
+	// Start collector
+	fmt.Println("Start collector")
+	collector.Start()
 
 	// listen for job submits and forward to workers
 	go func() {

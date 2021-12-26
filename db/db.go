@@ -5,7 +5,7 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
-	"github.com/martonorova/kubedepend-backend/model"
+	model "github.com/martonorova/kubedepend-backend/models"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )

@@ -5,10 +5,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/martonorova/kubedepend-backend/application"
 	c "github.com/martonorova/kubedepend-backend/constants"
 	"github.com/martonorova/kubedepend-backend/controllers"
 	"github.com/martonorova/kubedepend-backend/exithandler"
+	"github.com/martonorova/kubedepend-backend/pkg/application"
+	"github.com/martonorova/kubedepend-backend/services/worker"
 )
 
 func main() {
@@ -21,7 +22,9 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	app.Dispatcher.Start()
+	collector := worker.NewCollector(100)
+
+	app.Dispatcher.Start(collector)
 
 	if err := startAPI(app); err != nil {
 		log.Fatal(err.Error())

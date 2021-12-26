@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/martonorova/kubedepend-backend/application"
 	"github.com/martonorova/kubedepend-backend/dto"
-	m "github.com/martonorova/kubedepend-backend/model"
+	"github.com/martonorova/kubedepend-backend/pkg/application"
+	m "github.com/martonorova/kubedepend-backend/pkg/models"
 	"gorm.io/gorm"
 )
 
