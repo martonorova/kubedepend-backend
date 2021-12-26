@@ -19,12 +19,12 @@ type sqlJobRepository struct {
 func NewSQLJobRepository(connString string) (storage.JobRepository, error) {
 	sqlDB, err := sql.Open("postgres", connString)
 	if err != nil {
-		log.Panic(err.Error())
+		log.Println(err.Error())
 		return nil, err
 	}
 
 	if err := sqlDB.Ping(); err != nil {
-		log.Panic(err.Error())
+		log.Println(err.Error())
 		return nil, err
 	}
 
@@ -34,10 +34,15 @@ func NewSQLJobRepository(connString string) (storage.JobRepository, error) {
 
 	repository := &sqlJobRepository{db: *gormDB}
 
+	if err := repository.db.AutoMigrate(&models.Job{}); err != nil {
+		log.Println(err.Error())
+		return nil, err
+	}
+
 	return repository, nil
 }
 
-//sqlJobRepository implements JobRepository defined in repositories.go
+// sqlJobRepository implements JobRepository defined in repositories.go
 
 func (r *sqlJobRepository) Create(job models.Job) (*models.Job, error) {
 
