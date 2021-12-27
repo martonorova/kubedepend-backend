@@ -16,8 +16,8 @@ type JobController struct {
 	jobService services.JobService
 }
 
-func NewJobController(jobService services.JobService) *JobController {
-	return &JobController{
+func NewJobController(jobService services.JobService) JobController {
+	return JobController{
 		jobService: jobService,
 	}
 }
