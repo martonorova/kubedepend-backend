@@ -3,11 +3,11 @@ package models
 type JobStatus string
 
 const (
-	JOB_CREATED    JobStatus = "CREATED"
-	JOB_SUBMITTED  JobStatus = "SUBMITTED"
-	JOB_INPROGRESS JobStatus = "INPROGRESS"
-	JOB_DONE       JobStatus = "DONE"
-	JOB_FAILED     JobStatus = "FAILED"
+	JobStatusCreated    JobStatus = "CREATED"
+	JobStatusSubmitted  JobStatus = "SUBMITTED"
+	JobStatusInProgress JobStatus = "INPROGRESS"
+	JobStatusDone       JobStatus = "DONE"
+	JobStatusFailed     JobStatus = "FAILED"
 )
 
 type Job struct {

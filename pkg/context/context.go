@@ -1,39 +1,58 @@
 package context
 
 import (
-	"log"
+	"errors"
 
+	"github.com/martonorova/kubedepend-backend/config"
 	"github.com/martonorova/kubedepend-backend/pkg/ports/http/controllers"
 	"github.com/martonorova/kubedepend-backend/pkg/services"
+	"github.com/martonorova/kubedepend-backend/pkg/services/collector"
+	"github.com/martonorova/kubedepend-backend/pkg/services/execution"
 	"github.com/martonorova/kubedepend-backend/pkg/services/job"
 	"github.com/martonorova/kubedepend-backend/pkg/storage"
+	"github.com/martonorova/kubedepend-backend/pkg/storage/sql"
 )
 
 // based on the configuration, it returns resources
 
-func NewJobRepository() (storage.JobRepository, error) {
+func NewJobRepository(cfg config.Config) (storage.JobRepository, error) {
 	// init storage connection based on config
-	return nil, nil
+
+	if cfg.Storage.SQL.Enabled {
+		return sql.NewSQLJobRepository(cfg.Storage.SQL.GetDBConnString())
+	}
+
+	return nil, errors.New("no storage enabled")
 }
 
-func NewJobService() (services.JobService, error) {
-	jobRepository, err := NewJobRepository()
-	if err != nil {
-		log.Panicln(err.Error())
-	}
+func NewJobService(cfg config.Config, jobRepository storage.JobRepository) (services.JobService, error) {
 
 	return job.NewDefaultJobService(
 		jobRepository,
 	), nil
 }
 
-func NewJobController() (controllers.JobController, error) {
-	jobService, err := NewJobService()
-	if err != nil {
-		log.Panicln(err.Error())
-	}
+func NewCollectorService(cfg config.Config, jobService services.JobService) (services.CollectorService, error) {
+	return collector.NewDefaultCollectorService(jobService), nil
+}
 
-	return controllers.NewJobController(
+func NewExecutionService(cfg config.Config, collectorService services.CollectorService) (services.ExecutionService, error) {
+
+	return execution.NewDefaultExecutionService(
+		cfg.Worker.WorkerCount,
+		cfg.Worker.QueueSize,
+		collectorService,
+	), nil
+}
+
+func NewHTTPJobController(
+	cfg config.Config,
+	jobService services.JobService,
+	executionService services.ExecutionService,
+) (controllers.HTTPJobController, error) {
+
+	return controllers.NewHTTPJobController(
 		jobService,
+		executionService,
 	), nil
 }

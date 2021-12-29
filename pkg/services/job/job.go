@@ -1,6 +1,8 @@
 package job
 
 import (
+	"fmt"
+
 	"github.com/martonorova/kubedepend-backend/pkg/models"
 	"github.com/martonorova/kubedepend-backend/pkg/services"
 	"github.com/martonorova/kubedepend-backend/pkg/storage"
@@ -23,6 +25,7 @@ func (s *defaultJobService) Create(job models.Job) (*models.Job, error) {
 }
 
 func (s *defaultJobService) FindAll() (*[]models.Job, error) {
+	fmt.Printf("%+v\n", s.repository)
 	return s.repository.FindAll()
 }
 

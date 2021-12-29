@@ -12,3 +12,23 @@ type JobService interface {
 	Delete(jobID uint64) error
 	Update(job models.Job) (*models.Job, error)
 }
+
+type ExecutionService interface {
+	SubmitJob(jobSubmit *SubmitJobDTO) error
+	Start()
+}
+
+type CollectorService interface {
+	CollectJob(jobResult *JobResultDTO)
+	Start()
+}
+
+type SubmitJobDTO struct {
+	ID    uint64
+	Input uint64
+}
+
+type JobResultDTO struct {
+	ID     uint64
+	Result uint64
+}

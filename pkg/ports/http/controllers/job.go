@@ -12,20 +12,22 @@ import (
 	"github.com/martonorova/kubedepend-backend/pkg/services"
 )
 
-type JobController struct {
-	jobService services.JobService
+type HTTPJobController struct {
+	jobService       services.JobService
+	executionService services.ExecutionService
 }
 
-func NewJobController(jobService services.JobService) JobController {
-	return JobController{
-		jobService: jobService,
+func NewHTTPJobController(jobService services.JobService, executionService services.ExecutionService) HTTPJobController {
+	return HTTPJobController{
+		jobService:       jobService,
+		executionService: executionService,
 	}
 }
 
-func (jc *JobController) GetJobs(c *gin.Context) {
+func (jc HTTPJobController) GetJobs(c *gin.Context) {
 	jobs, err := jc.jobService.FindAll()
 	if err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusInternalServerError, responses.APIError())
 		return
 	}
@@ -33,18 +35,18 @@ func (jc *JobController) GetJobs(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, responses.APISuccessWithData(jobs))
 }
 
-func (jc *JobController) GetJob(c *gin.Context) {
+func (jc HTTPJobController) GetJob(c *gin.Context) {
 
 	jobID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusBadRequest, responses.APIError())
 		return
 	}
 
 	job, err := jc.jobService.FindByID(jobID)
 	if err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusNotFound, responses.APIError())
 		return
 	}
@@ -52,7 +54,7 @@ func (jc *JobController) GetJob(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, responses.APISuccessWithData(job))
 }
 
-func (jc *JobController) AddJob(c *gin.Context) {
+func (jc HTTPJobController) AddJob(c *gin.Context) {
 	var input requests.CreateJobRequest
 
 	if err := c.ShouldBindJSON(&input); err != nil {
@@ -61,9 +63,9 @@ func (jc *JobController) AddJob(c *gin.Context) {
 	}
 
 	// Save Job
-	job, err := jc.jobService.Create(models.Job{Input: input.Input})
+	job, err := jc.jobService.Create(models.Job{Input: input.Input, Status: models.JobStatusCreated})
 	if err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusInternalServerError, responses.APIError())
 		return
 	}
@@ -76,19 +78,21 @@ func (jc *JobController) AddJob(c *gin.Context) {
 	// 	c.IndentedJSON(http.StatusInternalServerError, m.APIError())
 	// }
 
+	jc.executionService.SubmitJob(&services.SubmitJobDTO{ID: job.ID, Input: job.Input})
+
 	c.IndentedJSON(http.StatusCreated, responses.APISuccessWithData(job))
 }
 
-func (jc *JobController) DeleteJob(c *gin.Context) {
+func (jc HTTPJobController) DeleteJob(c *gin.Context) {
 	jobID, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusBadRequest, responses.APIError())
 		return
 	}
 
 	if err := jc.jobService.Delete(jobID); err != nil {
-		log.Panicln(err.Error())
+		log.Println(err.Error())
 		c.IndentedJSON(http.StatusNotFound, responses.APIError())
 		return
 	}

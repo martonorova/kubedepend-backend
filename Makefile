@@ -1,5 +1,5 @@
 BINARY_NAME=main
-API_PATH=cmd/api/main.go
+API_PATH=main.go
 
 .PHONY: build
 build:

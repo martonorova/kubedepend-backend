@@ -1,0 +1,19 @@
+server:
+  enabled: true
+  port: 8080
+
+
+storage:
+  sql:
+    enabled: true
+    user: postgres
+    password: password
+    host: db
+    port: 5432
+    dbname: kubedepend
+
+worker:
+  enabled: true
+  workerCount: 5
+  queueSize: 10
+
